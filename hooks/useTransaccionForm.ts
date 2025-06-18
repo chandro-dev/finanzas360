@@ -1,4 +1,3 @@
-// src/hooks/useTransaccionForm.ts
 import db from '@/db/sqlite';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -40,9 +39,9 @@ export function useTransaccionForm(transaccionId?: string) {
             descripcion: data.descripcion,
             cantidad: data.cantidad.toString(),
             fecha: data.fecha,
-            cuentaId: data.cuentaId ?? undefined,
-            tarjetaId: data.tarjetaId ?? undefined,
-            categoriaId: data.categoriaId ?? undefined,
+            cuentaId: data.cuentaId ?? '',
+            tarjetaId: data.tarjetaId ?? '',
+            categoriaId: data.categoriaId ?? '',
           });
         }
       })
@@ -53,11 +52,13 @@ export function useTransaccionForm(transaccionId?: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
+  const normalizarId = (valor?: string) => (valor && valor !== '' ? valor : null);
+
   const guardar = async () => {
     const { descripcion, cantidad, fecha, cuentaId, tarjetaId, categoriaId } = form;
     if (!descripcion || !cantidad || !fecha)
       return Alert.alert('Error', 'Por favor completa todos los campos requeridos');
-    console.log(cuentaId + tarjetaId);
+
     try {
       await db.runAsync(
         `INSERT INTO transacciones (
@@ -68,12 +69,12 @@ export function useTransaccionForm(transaccionId?: string) {
           descripcion,
           parseFloat(cantidad),
           fecha,
-          cuentaId ?? null,
-          tarjetaId ?? null,
-          categoriaId ?? null,
+          normalizarId(cuentaId),
+          normalizarId(tarjetaId),
+          normalizarId(categoriaId),
         ]
       );
-      router.replace('/transacciones');
+      router.push('/transacciones');
     } catch (error) {
       Alert.alert('Error al guardar', String(error));
     }
@@ -94,13 +95,13 @@ export function useTransaccionForm(transaccionId?: string) {
           descripcion,
           parseFloat(cantidad),
           fecha,
-          cuentaId ?? null,
-          tarjetaId ?? null,
-          categoriaId ?? null,
+          normalizarId(cuentaId),
+          normalizarId(tarjetaId),
+          normalizarId(categoriaId),
           transaccionId,
         ]
       );
-      router.replace('/transacciones');
+      router.push('/transacciones');
     } catch (error) {
       Alert.alert('Error al actualizar', String(error));
     }

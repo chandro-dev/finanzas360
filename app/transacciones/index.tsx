@@ -1,4 +1,4 @@
-import TransaccionItem from "@/components/TransaccionItem";
+import TransaccionCard from "@/components/TransaccionCard";
 import db from "@/db/sqlite";
 import { Transaccion } from "@/types/model";
 import { Ionicons } from "@expo/vector-icons";
@@ -52,15 +52,20 @@ export default function TransaccionesIndex() {
         data={transacciones}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <TransaccionItem
-            transaccion={item}
+          <Pressable
             onPress={() =>
               router.push({
                 pathname: "/transacciones/editar",
                 params: { id: item.id }
               })
             }
-          />
+          >
+            <TransaccionCard
+              descripcion={item.descripcion}
+              cantidad={item.cantidad}
+              fecha={item.fecha}
+            />
+          </Pressable>
         )}
         contentContainerStyle={{ padding: 16 }}
       />

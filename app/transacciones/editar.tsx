@@ -1,11 +1,10 @@
 import { useTransaccionForm } from "@/hooks/useTransaccionForm";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { Text, View } from "react-native";
 import TransaccionForm from "./TransaccionForm";
 
 export default function CrearEditarTransaccionScreen() {
   const { id } = useLocalSearchParams();
-  const router = useRouter();
   const { form, loading, onChange, guardar, actualizar } = useTransaccionForm(
     id as string
   );

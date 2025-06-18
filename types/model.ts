@@ -23,13 +23,21 @@ export type Tarjeta = {
   disponible: number;
 };
 
+export type Deuda = {
+  id: string;
+  personaId: string;
+  monto: number;
+  fecha: string;
+  descripcion: string;
+  pagado: boolean;
+};
+
 // /models/Persona.ts
 export type Persona = {
   id: string;
   nombre: string;
-  deuda: number;
+  deuda: number; // monto total adeudado
 };
-
 // /models/Recordatorio.ts
 export type Recordatorio = {
   id: string;
@@ -40,5 +48,5 @@ export type Recordatorio = {
 export type Categoria = {
   id: string;
   nombre: string;
-  tipo: 'ingreso' | 'egreso';
+  tipo: "ingreso" | "egreso";
 };

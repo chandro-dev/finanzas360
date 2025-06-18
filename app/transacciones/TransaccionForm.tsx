@@ -11,6 +11,7 @@ export interface TransaccionFormState {
   fecha: string;
   cuentaId: string;
   categoriaId: string;
+  tarjetaId?: string;
 }
 
 interface Props {
@@ -24,11 +25,13 @@ interface Props {
 export default function TransaccionForm({ form, onChange, onSubmit, loading, submitText = 'Guardar' }: Props) {
   const [cuentas, setCuentas] = useState<Cuenta[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [tarjetas, setTarjetas] = useState<{ id: string; nombre: string }[]>([]);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   useEffect(() => {
     db.getAllAsync<Cuenta>('SELECT id, nombre FROM cuentas').then(setCuentas);
     db.getAllAsync<Categoria>('SELECT id, nombre FROM categorias').then(setCategorias);
+    db.getAllAsync('SELECT id, nombre FROM tarjetas').then(setTarjetas);
   }, []);
 
   return (
@@ -58,6 +61,18 @@ export default function TransaccionForm({ form, onChange, onSubmit, loading, sub
           <Picker.Item label="Seleccione una cuenta" value="" />
           {cuentas.map((c) => (
             <Picker.Item key={c.id} label={c.nombre} value={c.id} />
+          ))}
+        </Picker>
+      </View>
+
+      <Text className="text-black dark:text-white mb-2">Tarjeta</Text>
+      <View className="border rounded mb-4 bg-white">
+        <Picker
+          selectedValue={form.tarjetaId}
+          onValueChange={(itemValue) => onChange('tarjetaId', itemValue)}>
+          <Picker.Item label="Seleccione una tarjeta (opcional)" value="" />
+          {tarjetas.map((t) => (
+            <Picker.Item key={t.id} label={t.nombre} value={t.id} />
           ))}
         </Picker>
       </View>

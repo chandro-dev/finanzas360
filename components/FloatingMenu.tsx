@@ -8,7 +8,9 @@ const opciones = [
   { label: 'Agregar transacción', action: () =>  router.push('/transacciones') },
   { label: 'Agregar cuenta', action: () => router.push('/cuentas') },
   { label: 'Agregar tarjeta', action: () => router.push('/tarjetas') },
-  { label: 'Agregar deuda', action: () => console.log('Deuda') },
+  { label: 'Agregar deuda', action: () =>  router.push('/deudas') },
+    { label: 'Agregar Persona', action: () =>  router.push('/personas') },
+
 ];
 
 export default function FloatingMenu() {

@@ -69,14 +69,23 @@ export function crearTablas() {
       FOREIGN KEY (categoriaId) REFERENCES categorias(id) ON DELETE SET NULL
     );
 
-    CREATE TABLE IF NOT EXISTS deudas (
-      id TEXT PRIMARY KEY NOT NULL,
-      persona TEXT NOT NULL,
-      monto REAL NOT NULL,
-      fecha TEXT NOT NULL,
-      pagado INTEGER DEFAULT 0,
-      sincronizado INTEGER DEFAULT 0
-    );
+  CREATE TABLE IF NOT EXISTS personas (
+    id TEXT PRIMARY KEY NOT NULL,
+    nombre TEXT NOT NULL,
+    deuda REAL DEFAULT 0,
+    sincronizado INTEGER DEFAULT 0
+  );
+
+  CREATE TABLE IF NOT EXISTS deudas (
+    id TEXT PRIMARY KEY NOT NULL,
+    personaId TEXT NOT NULL,
+    monto REAL NOT NULL,
+    fecha TEXT NOT NULL,
+    descripcion TEXT,
+    pagado INTEGER DEFAULT 0,
+    sincronizado INTEGER DEFAULT 0,
+    FOREIGN KEY (personaId) REFERENCES personas(id) ON DELETE CASCADE
+  );
 
     CREATE TABLE IF NOT EXISTS recordatorios (
       id TEXT PRIMARY KEY NOT NULL,
