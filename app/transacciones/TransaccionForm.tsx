@@ -1,9 +1,20 @@
-import db from '@/db/sqlite';
-import { Categoria, Cuenta } from '@/types/model';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { Picker } from '@react-native-picker/picker';
-import { useEffect, useState } from 'react';
-import { Button, Text, TextInput, View } from 'react-native';
+import db from "@/db/sqlite";
+import { Categoria, Cuenta } from "@/types/model";
+import { Ionicons } from "@expo/vector-icons";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { Picker } from "@react-native-picker/picker";
+import { useEffect, useState } from "react";
+
+import {
+  Button,
+  KeyboardAvoidingView,
+  Platform,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export interface TransaccionFormState {
   descripcion: string;
@@ -22,90 +33,198 @@ interface Props {
   submitText?: string;
 }
 
-export default function TransaccionForm({ form, onChange, onSubmit, loading, submitText = 'Guardar' }: Props) {
+export default function TransaccionForm({
+  form,
+  onChange,
+  onSubmit,
+  loading,
+  submitText = "Guardar"
+}: Props) {
+  const [step, setStep] = useState(0);
   const [cuentas, setCuentas] = useState<Cuenta[]>([]);
   const [categorias, setCategorias] = useState<Categoria[]>([]);
-  const [tarjetas, setTarjetas] = useState<{ id: string; nombre: string }[]>([]);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
-    db.getAllAsync<Cuenta>('SELECT id, nombre FROM cuentas').then(setCuentas);
-    db.getAllAsync<Categoria>('SELECT id, nombre FROM categorias').then(setCategorias);
-    db.getAllAsync('SELECT id, nombre FROM tarjetas').then(setTarjetas);
+    db.getAllAsync<Cuenta>("SELECT id, nombre FROM cuentas").then(setCuentas);
+    db.getAllAsync<Categoria>("SELECT id, nombre, tipo FROM categorias").then(
+      setCategorias
+    );
   }, []);
 
+  const avanzar = () => setStep((s) => s + 1);
+  const retroceder = () => setStep((s) => Math.max(0, s - 1));
+  const formatearPesosColombianos = (valor: string) => {
+    const limpio = valor.replace(/\D/g, ""); // solo números
+    const numero = parseInt(limpio || "0", 10);
+
+    return new Intl.NumberFormat("es-CO", {
+      style: "currency",
+      currency: "COP",
+      maximumFractionDigits: 0
+    }).format(numero);
+  };
+
+  const tipo = categorias.find((c) => c.id === form.categoriaId)?.tipo ?? null;
+  const fondo =
+    tipo === "ingreso"
+      ? "bg-green-200"
+      : tipo === "egreso"
+        ? "bg-red-200"
+        : "bg-neutral-100";
+
   return (
-    <View className="p-4">
-      <Text className="text-black dark:text-white mb-2">Descripción</Text>
-      <TextInput
-        value={form.descripcion}
-        onChangeText={(text) => onChange('descripcion', text)}
-        placeholder="Descripción"
-        className="border p-2 rounded text-black bg-white mb-4"
-      />
+    <KeyboardAvoidingView
+      className={`flex-1 items-center py-200 px-4  dark:bg-neutral-900`}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      style={{ paddingTop: insets.top + 24 }}
+    >
+      <View
+        className={`w-full max-w-lg bg-white ${fondo} rounded-3xl shadow-xl p-8 flex flex-col space-y-6 mt-4`}
+      >
+        {step === 0 && (
+          <View className="flex flex-col items-center space-y-6">
+            <Text className="text-3xl font-extrabold text-center text-neutral-800">
+              ¿Qué tipo de transacción es?
+            </Text>
 
-      <Text className="text-black dark:text-white mb-2">Cantidad</Text>
-      <TextInput
-        value={form.cantidad}
-        onChangeText={(text) => onChange('cantidad', text)}
-        placeholder="0.00"
-        keyboardType="numeric"
-        className="border p-2 rounded text-black bg-white mb-4"
-      />
+            <View className="grid grid-cols-2 gap-4 w-full max-w-xs">
+              {[
+                {
+                  tipo: "ingreso",
+                  color: "bg-green-500",
+                  icon: (
+                    <Ionicons
+                      name="arrow-down-circle"
+                      size={32}
+                      color="white"
+                    />
+                  )
+                },
+                {
+                  tipo: "egreso",
+                  color: "bg-red-500",
+                  icon: (
+                    <Ionicons name="arrow-up-circle" size={32} color="white" />
+                  )
+                }
+              ].map(({ tipo, color, icon }) => (
+                <TouchableOpacity
+                  key={tipo}
+                  onPress={() => {
+                    const cat = categorias.find((c) => c.tipo === tipo);
+                    if (cat) onChange("categoriaId", cat.id);
+                    avanzar();
+                  }}
+                  className={`flex flex-col items-center justify-center gap-2 p-4 rounded-2xl shadow-md ${color}`}
+                >
+                  {icon}
+                  <Text className="text-white font-bold text-lg capitalize">
+                    {tipo}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
+        {step === 1 && (
+          <View className="space-y-6">
+            <Text className="text-3xl font-extrabold text-center text-neutral-800">
+              ¿Cuál es el monto?
+            </Text>
+            <TextInput
+              value={formatearPesosColombianos(form.cantidad)}
+              onChangeText={(text) => {
+                const limpio = text.replace(/\D/g, "");
+                onChange("cantidad", limpio);
+              }}
+              keyboardType="numeric"
+              placeholder="$0"
+              className="bg-neutral-100 p-4 rounded-xl text-center text-lg text-black"
+            />
+            <Button title="Siguiente" onPress={avanzar} />
+          </View>
+        )}
 
-      <Text className="text-black dark:text-white mb-2">Cuenta</Text>
-      <View className="border rounded mb-4 bg-white">
-        <Picker
-          selectedValue={form.cuentaId}
-          onValueChange={(itemValue) => onChange('cuentaId', itemValue)}>
-          <Picker.Item label="Seleccione una cuenta" value="" />
-          {cuentas.map((c) => (
-            <Picker.Item key={c.id} label={c.nombre} value={c.id} />
-          ))}
-        </Picker>
+        {step === 2 && (
+          <View className="space-y-6">
+            <Text className="text-3xl font-extrabold text-center text-neutral-800">
+              ¿Cómo lo describirías?
+            </Text>
+            <TextInput
+              value={form.descripcion}
+              onChangeText={(text) => onChange("descripcion", text)}
+              placeholder="Ej: Compra mercado"
+              className="bg-neutral-100 p-4 rounded-xl text-center text-lg text-black"
+            />
+            <Button title="Siguiente" onPress={avanzar} />
+          </View>
+        )}
+
+        {step === 3 && (
+          <View className="space-y-6">
+            <Text className="text-3xl font-extrabold text-center text-neutral-800">
+              ¿Desde qué cuenta?
+            </Text>
+            <View className="bg-neutral-100 rounded-xl overflow-hidden">
+              <Picker
+                selectedValue={form.cuentaId}
+                onValueChange={(val) => onChange("cuentaId", val)}
+              >
+                <Picker.Item label="Selecciona una cuenta" value="" />
+                {cuentas.map((c) => (
+                  <Picker.Item key={c.id} label={c.nombre} value={c.id} />
+                ))}
+              </Picker>
+            </View>
+            <Button
+              title="Siguiente"
+              onPress={avanzar}
+              disabled={!form.cuentaId}
+            />
+          </View>
+        )}
+
+        {step === 4 && (
+          <View className="space-y-6">
+            <Text className="text-3xl font-extrabold text-center text-neutral-800">
+              ¿Cuándo fue?
+            </Text>
+            <Button
+              title={new Date(form.fecha).toLocaleDateString()}
+              onPress={() => setShowDatePicker(true)}
+            />
+            {showDatePicker && (
+              <DateTimePicker
+                value={new Date(form.fecha)}
+                mode="date"
+                display="default"
+                onChange={(_, date) => {
+                  setShowDatePicker(false);
+                  if (date) onChange("fecha", date.toISOString().slice(0, 10));
+                }}
+              />
+            )}
+            <View className="pt-2">
+              <Button
+                title={submitText}
+                onPress={onSubmit}
+                disabled={loading}
+                color="#22c55e"
+              />
+            </View>
+          </View>
+        )}
+
+        {step > 0 && (
+          <TouchableOpacity onPress={retroceder}>
+            <Text className="text-center text-blue-500 text-base mt-4">
+              ← Volver al paso anterior
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
-
-      <Text className="text-black dark:text-white mb-2">Tarjeta</Text>
-      <View className="border rounded mb-4 bg-white">
-        <Picker
-          selectedValue={form.tarjetaId}
-          onValueChange={(itemValue) => onChange('tarjetaId', itemValue)}>
-          <Picker.Item label="Seleccione una tarjeta (opcional)" value="" />
-          {tarjetas.map((t) => (
-            <Picker.Item key={t.id} label={t.nombre} value={t.id} />
-          ))}
-        </Picker>
-      </View>
-
-      <Text className="text-black dark:text-white mb-2">Categoría</Text>
-      <View className="border rounded mb-4 bg-white">
-        <Picker
-          selectedValue={form.categoriaId}
-          onValueChange={(itemValue) => onChange('categoriaId', itemValue)}>
-          <Picker.Item label="Seleccione una categoría" value="" />
-          {categorias.map((c) => (
-            <Picker.Item key={c.id} label={c.nombre} value={c.id} />
-          ))}
-        </Picker>
-      </View>
-
-      <Text className="text-black dark:text-white mb-2">Fecha</Text>
-      <Button title={new Date(form.fecha).toLocaleDateString()} onPress={() => setShowDatePicker(true)} />
-      {showDatePicker && (
-        <DateTimePicker
-          value={new Date(form.fecha)}
-          mode="date"
-          display="default"
-          onChange={(_, selectedDate) => {
-            setShowDatePicker(false);
-            if (selectedDate) onChange('fecha', selectedDate.toISOString().slice(0, 10));
-          }}
-        />
-      )}
-
-      <View className="mt-6">
-        <Button title={submitText} onPress={onSubmit} disabled={loading} color="#22c55e" />
-      </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }

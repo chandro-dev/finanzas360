@@ -20,6 +20,7 @@ export default function TarjetasScreen() {
     setTarjetas(results);
   };
 
+
   useFocusEffect(
     useCallback(() => {
       cargarTarjetas();

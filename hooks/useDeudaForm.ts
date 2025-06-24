@@ -34,6 +34,18 @@ export function useDeudaForm(deudaId?: string) {
     });
   }, [deudaId]);
 
+  const actualizarDeudaTotalPersona = async (personaId: string) => {
+    const result = await db.getFirstAsync<any>(
+      'SELECT SUM(monto) as total FROM deudas WHERE personaId = ? AND pagado = 0',
+      [personaId]
+    );
+    const nuevaDeuda = result?.total || 0;
+    await db.runAsync(
+      'UPDATE personas SET deuda = ? WHERE id = ?',
+      [nuevaDeuda, personaId]
+    );
+  };
+
   const onChange = (field: keyof typeof form, value: any) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
@@ -54,6 +66,8 @@ export function useDeudaForm(deudaId?: string) {
         pagado ? 1 : 0,
       ]
     );
+
+    await actualizarDeudaTotalPersona(personaId);
     router.replace("/deudas");
   };
 
@@ -72,6 +86,17 @@ export function useDeudaForm(deudaId?: string) {
         deudaId,
       ]
     );
+
+    await actualizarDeudaTotalPersona(personaId);
+    router.replace("/deudas");
+  };
+
+  const eliminar = async () => {
+    if (!deudaId) return;
+    const { personaId } = form;
+
+    await db.runAsync('DELETE FROM deudas WHERE id = ?', [deudaId]);
+    await actualizarDeudaTotalPersona(personaId);
     router.replace("/deudas");
   };
 
@@ -80,5 +105,6 @@ export function useDeudaForm(deudaId?: string) {
     onChange,
     guardar,
     actualizar,
+    eliminar,
   };
 }

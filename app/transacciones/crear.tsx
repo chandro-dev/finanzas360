@@ -1,20 +1,28 @@
-import { useTransaccionForm } from '@/hooks/useTransaccionForm';
-import { useRouter } from 'expo-router';
-import { Text, View } from 'react-native';
-import TransaccionForm from './TransaccionForm';
+import { useTransaccionForm } from "@/hooks/useTransaccionForm";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect } from "react";
+import { Text, View } from "react-native";
+import TransaccionForm from "./TransaccionForm";
 
 export default function CrearTransaccionScreen() {
   const router = useRouter();
-  const {
-    form,
-    loading,
-    onChange,
-    guardar,
-  } = useTransaccionForm();
-
+  const { deudaId } = useLocalSearchParams();
+  const { form, loading, onChange, guardar,inicializarFormulario } = useTransaccionForm();
+  useEffect(() => {
+    if (deudaId && typeof deudaId === "string") {
+      inicializarFormulario({
+        descripcion: `Pago deuda ${deudaId}`,
+        cantidad: "",
+        fecha: new Date().toISOString().slice(0, 10),
+        cuentaId: "",
+        categoriaId: "",
+        tarjetaId: ""
+      });
+    }
+  }, [deudaId]);
   const handleSubmit = async () => {
     await guardar();
-    router.push("/transacciones")
+    router.push("/transacciones");
   };
 
   if (loading)

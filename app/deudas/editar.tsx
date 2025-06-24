@@ -1,22 +1,15 @@
-// app/deudas/editar.tsx
 import { useDeudaForm } from "@/hooks/useDeudaForm";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect } from "react";
-import {
-    ActivityIndicator,
-    Alert,
-    Button,
-    Switch,
-    Text,
-    TextInput,
-    View,
-} from "react-native";
+import { Alert, Button, Switch, Text, TextInput, View } from "react-native";
+
+import ListadoTransacciones from "@/components/ListadoTransacciones";
 
 export default function EditarDeudaScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
 
-  const { form, onChange, actualizarDeuda, loading } = useDeudaForm(id as string);
+  const { form, onChange, actualizar } = useDeudaForm(id as string);
 
   useEffect(() => {
     if (!id || typeof id !== "string") {
@@ -27,17 +20,8 @@ export default function EditarDeudaScreen() {
 
   const guardarCambios = async () => {
     if (!id || typeof id !== "string") return;
-    await actualizarDeuda();
+    await actualizar();
   };
-
-  if (loading) {
-    return (
-      <View className="flex-1 items-center justify-center bg-white dark:bg-neutral-900">
-        <ActivityIndicator size="large" />
-        <Text className="mt-4 text-black dark:text-white">Cargando deuda...</Text>
-      </View>
-    );
-  }
 
   return (
     <View className="flex-1 bg-white dark:bg-neutral-900 p-4">
@@ -47,8 +31,8 @@ export default function EditarDeudaScreen() {
 
       <Text className="text-black dark:text-white mb-1">Persona</Text>
       <TextInput
-        value={form.persona}
-        onChangeText={(text) => onChange("persona", text)}
+        value={form.personaId}
+        onChangeText={(text) => onChange("personaId", text)}
         placeholder="Nombre de la persona"
         className="border rounded p-2 mb-4 text-black bg-white"
       />
@@ -78,7 +62,31 @@ export default function EditarDeudaScreen() {
         />
       </View>
 
-      <Button title="Guardar Cambios" onPress={guardarCambios} color="#2563eb" />
+      <Button
+        title="Guardar Cambios"
+        onPress={guardarCambios}
+        color="#2563eb"
+      />
+
+      {/* Listado reutilizable de pagos */}
+      <ListadoTransacciones
+        sentenciaSQL="SELECT * FROM transacciones WHERE descripcion LIKE ? ORDER BY fecha DESC"
+        parametrosIniciales={[`Pago deuda ${id}%`]}
+        titulo="Pagos realizados"
+      />
+
+      <View className="mt-4">
+        <Button
+          title="Agregar Pago Parcial"
+          color="#10b981"
+          onPress={() =>
+            router.push({
+              pathname: "/transacciones/crear",
+              params: { deudaId: id }
+            })
+          }
+        />
+      </View>
     </View>
   );
 }

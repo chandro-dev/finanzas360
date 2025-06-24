@@ -29,7 +29,8 @@ export type Deuda = {
   monto: number;
   fecha: string;
   descripcion: string;
-  pagado: boolean;
+  pagado: number;
+  personaNombre:string;
 };
 
 // /models/Persona.ts

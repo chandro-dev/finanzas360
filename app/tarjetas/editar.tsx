@@ -1,48 +1,14 @@
-import TransaccionItem from "@/components/TransaccionCard"; // o TransaccionCard
-import db from "@/db/sqlite";
+import ListadoTransacciones from "@/components/ListadoTransacciones";
 import { useTarjetaForm } from "@/hooks/useTarjetaForm";
-import { Transaccion } from "@/types/model";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
-import {
-  Alert,
-  Button,
-  FlatList,
-  Pressable,
-  Text,
-  TextInput,
-  View
-} from "react-native";
+import { useLocalSearchParams } from "expo-router";
+import { Button, Text, TextInput, View } from "react-native";
 
 export default function EditarTarjetaScreen() {
   const { id } = useLocalSearchParams();
-  const router = useRouter();
   const { form, loading, onChange, actualizarTarjeta } = useTarjetaForm(
     id as string
   );
-
-  const [transacciones, setTransacciones] = useState<Transaccion[]>([]);
-
-  useEffect(() => {
-    if (!id || typeof id !== "string") {
-      Alert.alert("Error", "ID de tarjeta no válido");
-      router.back();
-      return;
-    }
-
-    const fetchTransacciones = async () => {
-      const data = await db.getAllAsync<Transaccion>(
-        "SELECT * FROM transacciones WHERE tarjetaId = ? ORDER BY fecha DESC",
-        [id]
-      );
-      setTransacciones(data);
-    };
-
-    fetchTransacciones();
-  }, [id]);
-
   const guardarCambios = async () => {
-    if (!id || typeof id !== "string") return;
     await actualizarTarjeta();
   };
 
@@ -88,34 +54,11 @@ export default function EditarTarjetaScreen() {
         color="#2563eb"
       />
 
-      {transacciones.length > 0 && (
-        <View className="mt-6">
-          <Text className="text-lg font-bold text-black dark:text-white mb-2">
-            Transacciones asociadas
-          </Text>
-
-          <FlatList
-            data={transacciones}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <Pressable
-                onPress={() =>
-                  router.push({
-                    pathname: "/transacciones/editar",
-                    params: { id: item.id }
-                  })
-                }
-              >
-                <TransaccionItem
-                  descripcion={item.descripcion}
-                  cantidad={item.cantidad}
-                  fecha={item.fecha}
-                />
-              </Pressable>
-            )}
-          />
-        </View>
-      )}
+      <ListadoTransacciones
+        sentenciaSQL="SELECT * FROM transacciones WHERE tarjetaId = ? ORDER BY fecha DESC"
+        parametrosIniciales={[id]}
+        titulo="Transacciones asociadas"
+      />
     </View>
   );
 }

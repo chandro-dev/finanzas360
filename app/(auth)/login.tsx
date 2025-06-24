@@ -1,5 +1,4 @@
 import { useAuth } from "@/context/AuthContext";
-import { autenticarBiometria } from "@/hooks/useBiometria";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Button, View } from "react-native";
@@ -14,7 +13,7 @@ export default function LoginScreen() {
     if (autenticado) return; // evita bucles
 
     setCargando(true);
-    const ok = await autenticarBiometria();
+    const ok = true //await autenticarBiometria();
     setCargando(false);
 
     if (ok) {

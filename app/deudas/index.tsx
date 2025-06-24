@@ -3,15 +3,24 @@ import { Deuda } from "@/types/model";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import { FlatList, Pressable, Text, TouchableOpacity, View } from "react-native";
+import {
+  FlatList,
+  Pressable,
+  Text,
+  TouchableOpacity,
+  View
+} from "react-native";
 
 export default function DeudasScreen() {
   const [deudas, setDeudas] = useState<Deuda[]>([]);
   const router = useRouter();
 
   const cargarDeudas = async () => {
-    const results = await db.getAllAsync<Deuda>(
-      "SELECT * FROM deudas ORDER BY fecha DESC"
+    const results = await db.getAllAsync<any>(
+      `SELECT deudas.*, personas.nombre AS personaNombre 
+     FROM deudas 
+     JOIN personas ON personas.id = deudas.personaId 
+     ORDER BY fecha DESC`
     );
     setDeudas(results);
   };
@@ -37,16 +46,16 @@ export default function DeudasScreen() {
             onPress={() => {
               router.push({
                 pathname: "/deudas/editar",
-                params: { id: item.id },
+                params: { id: item.id }
               });
             }}
           >
             <Text className="text-black dark:text-white font-semibold">
-              {item.personaId}
+              {item.personaNombre}
             </Text>
             <Text className="text-gray-500 dark:text-gray-300">
               ${item.monto.toLocaleString()}
-            </Text>
+            </Text> 
             <Text className="text-xs text-gray-400">{item.fecha}</Text>
           </TouchableOpacity>
         )}
