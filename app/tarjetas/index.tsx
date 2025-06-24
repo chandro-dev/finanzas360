@@ -20,43 +20,73 @@ export default function TarjetasScreen() {
     setTarjetas(results);
   };
 
-
   useFocusEffect(
     useCallback(() => {
       cargarTarjetas();
-
-      // Si necesitas limpiar algo al salir de la pantalla:
-      return () => {
-        // cleanup opcional
-      };
+      return () => {};
     }, [])
   );
 
   const irACrear = () => router.push("/tarjetas/crear");
-  const irAEditar = (id: string) => {
-    console.log(id);
-    router.push({ pathname: "/tarjetas/editar", params: { id: id } });
+  const irAEditar = (id: string) =>
+    router.push({ pathname: "/tarjetas/editar", params: { id } });
+
+  const renderItem = ({ item }: { item: Tarjeta }) => {
+    const porcentaje = (item.disponible / item.cupo) * 100;
+    const colorBarra =
+      porcentaje >= 70
+        ? "bg-green-500"
+        : porcentaje >= 30
+        ? "bg-yellow-500"
+        : "bg-red-500";
+
+    return (
+      <TouchableOpacity
+        className="bg-white dark:bg-neutral-800 p-4 mb-3 rounded-2xl shadow space-y-2"
+        onPress={() => irAEditar(item.id)}
+      >
+        <View className="flex-row items-center space-x-3">
+          <Ionicons name="card-outline" size={28} color="#2563eb" />
+          <Text className="text-lg font-bold text-black dark:text-white">
+            {item.nombre}
+          </Text>
+        </View>
+
+        <Text className="text-sm text-neutral-600 dark:text-neutral-300">
+          Cupo:{" "}
+          <Text className="font-semibold text-black dark:text-white">
+            {item.cupo.toLocaleString("es-CO", {
+              style: "currency",
+              currency: "COP",
+              maximumFractionDigits: 0
+            })}
+          </Text>
+        </Text>
+
+        <Text className="text-sm text-neutral-600 dark:text-neutral-300">
+          Disponible:{" "}
+          <Text className="font-semibold text-black dark:text-white">
+            {item.disponible.toLocaleString("es-CO", {
+              style: "currency",
+              currency: "COP",
+              maximumFractionDigits: 0
+            })}
+          </Text>
+        </Text>
+
+        <View className="w-full h-3 bg-neutral-300 dark:bg-neutral-700 rounded-full overflow-hidden mt-2">
+          <View
+            className={`h-full ${colorBarra}`}
+            style={{ width: `${porcentaje}%` }}
+          />
+        </View>
+      </TouchableOpacity>
+    );
   };
-  const renderItem = ({ item }: { item: Tarjeta }) => (
-    <TouchableOpacity
-      className="bg-white dark:bg-neutral-800 p-4 mb-2 rounded shadow"
-      onPress={() => irAEditar(item.id)}
-    >
-      <Text className="text-lg font-semibold text-black dark:text-white">
-        {item.nombre}
-      </Text>
-      <Text className="text-sm text-gray-600 dark:text-gray-300">
-        Cupo: ${item.cupo.toLocaleString()}
-      </Text>
-      <Text className="text-sm text-gray-600 dark:text-gray-300">
-        Disponible: ${item.disponible.toLocaleString()}
-      </Text>
-    </TouchableOpacity>
-  );
 
   return (
-    <View className="flex-1 bg-white dark:bg-neutral-900 p-4">
-      <Text className="text-2xl font-bold mb-4 text-black dark:text-white">
+    <View className="flex-1 bg-white dark:bg-neutral-900 p-4 relative">
+      <Text className="text-2xl font-extrabold mb-4 text-black dark:text-white">
         Tus Tarjetas
       </Text>
 
@@ -65,7 +95,7 @@ export default function TarjetasScreen() {
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         ListEmptyComponent={
-          <Text className="text-gray-500 dark:text-gray-400">
+          <Text className="text-center text-neutral-500 dark:text-neutral-400 mt-10">
             No hay tarjetas registradas.
           </Text>
         }
@@ -73,10 +103,11 @@ export default function TarjetasScreen() {
 
       <TouchableOpacity
         onPress={irACrear}
-        className="absolute bottom-6 right-6 bg-blue-600 p-4 rounded-full shadow-lg"
+        className="absolute bottom-6 right-6 bg-blue-600 p-5 rounded-full shadow-lg"
       >
-        <Ionicons name="add" size={24} color="white" />
+        <Ionicons name="add" size={28} color="white" />
       </TouchableOpacity>
     </View>
   );
 }
+  
