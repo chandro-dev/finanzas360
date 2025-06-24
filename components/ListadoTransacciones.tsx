@@ -22,22 +22,23 @@ interface Props {
   parametrosIniciales?: any[];
   titulo?: string;
   filtros?: Filtro[];
+  soloUnaPagina?: boolean;
 }
 
 export default function ListadoTransacciones({
   sentenciaSQL,
   parametrosIniciales = [],
   titulo = "Transacciones",
-  filtros = []
+  filtros = [],
+  soloUnaPagina
 }: Props) {
   const router = useRouter();
   const [filtrosValores, setFiltrosValores] = useState<Record<string, string>>(
     {}
   );
   const [parametros, setParametros] = useState<any[]>(parametrosIniciales);
-
   const { transacciones, cargarMas, cargando, fin, reiniciar } =
-    usePaginacionTransacciones(sentenciaSQL, parametros);
+    usePaginacionTransacciones(sentenciaSQL, parametros, soloUnaPagina);
 
   useEffect(() => {
     cargarMas(); // carga inicial

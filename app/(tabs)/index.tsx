@@ -238,6 +238,7 @@ export default function HomeScreen() {
               sentenciaSQL="SELECT * FROM transacciones ORDER BY fecha DESC"
               parametrosIniciales={[]}
               titulo="Últimas Transacciones"
+              soloUnaPagina={true}
             />
             <View className="mt-6 mb-24">
               <TouchableOpacity
