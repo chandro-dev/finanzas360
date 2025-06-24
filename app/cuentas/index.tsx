@@ -1,9 +1,15 @@
+import db from "@/db/sqlite";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useState } from "react";
-import { Alert, Pressable, ScrollView, Text, View } from "react-native";
-
-import db from "@/db/sqlite";
+import {
+  Alert,
+  FlatList,
+  Pressable,
+  Text,
+  TouchableOpacity,
+  View
+} from "react-native";
 
 interface Cuenta {
   id: string;
@@ -16,7 +22,7 @@ export default function CuentasScreen() {
   const router = useRouter();
 
   const cargarCuentas = async () => {
-    const rows = await db.getAllAsync<Cuenta>("SELECT * FROM cuentas", []);
+    const rows = await db.getAllAsync<Cuenta>("SELECT * FROM cuentas");
     setCuentas(rows);
   };
 
@@ -38,42 +44,69 @@ export default function CuentasScreen() {
     ]);
   };
 
+  const renderCuenta = ({ item }: { item: Cuenta }) => {
+    const colorSaldo = item.saldo >= 0 ? "text-green-600" : "text-red-500";
+    const icono = item.saldo >= 0 ? "arrow-up-circle" : "arrow-down-circle";
+    const saldoFormateado = new Intl.NumberFormat("es-CO", {
+      style: "currency",
+      currency: "COP",
+      maximumFractionDigits: 0
+    }).format(item.saldo);
+
+    return (
+      <Pressable
+        onPress={() =>
+          router.push({ pathname: "/cuentas/editar", params: { id: item.id } })
+        }
+        onLongPress={() => eliminarCuenta(item.id)}
+        className="mb-4"
+      >
+        <View className="flex-row items-center bg-white dark:bg-neutral-800 rounded-2xl p-4 shadow space-x-4">
+          <Ionicons
+            name={icono}
+            size={32}
+            color={item.saldo >= 0 ? "#16a34a" : "#dc2626"}
+          />
+          <View className="flex-1">
+            <Text className="text-lg font-bold text-neutral-900 dark:text-white">
+              {item.nombre}
+            </Text>
+            <Text className={`text-base ${colorSaldo}`}>{saldoFormateado}</Text>
+          </View>
+          <Ionicons
+            name="chevron-forward"
+            size={20}
+            color="#9ca3af"
+            style={{ opacity: 0.6 }}
+          />
+        </View>
+      </Pressable>
+    );
+  };
+
   return (
-    <View className="flex-1 bg-white dark:bg-neutral-900 p-4">
-      <Text className="text-2xl font-bold text-black dark:text-white mb-4">
-        Cuentas
+    <View className="flex-1 bg-white dark:bg-neutral-900 px-5 pt-6 pb-20">
+      <Text className="text-3xl font-extrabold text-neutral-900 dark:text-white mb-4">
+        Mis Cuentas
       </Text>
 
-      <ScrollView>
-        {cuentas.map((cuenta) => (
-          <Pressable
-            key={cuenta.id}
-            onPress={() => {
-              router.push({
-                pathname: "/cuentas/editar",params: {id:cuenta.id} 
-              });
-            }}
-            onLongPress={() => eliminarCuenta(cuenta.id)}
-          >
-            <View className="bg-white dark:bg-neutral-800 rounded-lg p-4 mb-3 shadow">
-              <Text className="text-lg font-semibold text-black dark:text-white">
-                {cuenta.nombre}
-              </Text>
-              <Text className="text-base text-gray-700 dark:text-gray-300">
-                Saldo: ${cuenta.saldo.toLocaleString("es-CO")}
-              </Text>
-              <Text>{cuenta.id}</Text>
-            </View>
-          </Pressable>
-        ))}
-      </ScrollView>
+      <FlatList
+        data={cuentas}
+        keyExtractor={(item) => item.id}
+        renderItem={renderCuenta}
+        ListEmptyComponent={
+          <Text className="text-center text-neutral-400 mt-10">
+            No hay cuentas registradas.
+          </Text>
+        }
+      />
 
-      <Pressable
+      <TouchableOpacity
         onPress={() => router.push("/cuentas/crear")}
-        className="absolute bottom-6 right-6 bg-blue-600 rounded-full p-4 shadow-lg"
+        className="absolute bottom-6 right-6 bg-blue-600 p-4 rounded-full shadow-lg"
       >
-        <Ionicons name="add" size={24} color="white" />
-      </Pressable>
+        <Ionicons name="add" size={28} color="white" />
+      </TouchableOpacity>
     </View>
   );
 }
