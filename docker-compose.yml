@@ -9,9 +9,11 @@ services:
       - "${APP_PORT:-8000}:${APP_PORT:-8000}"
     env_file:
       - .env
-
+    networks:
+      - finanzas_net
     volumes:
       - .:/app
+
 networks:
   finanzas_net:
-    driver: bridge
+    external: true
