@@ -12,3 +12,6 @@ services:
 
     volumes:
       - .:/app
+networks:
+  finanzas_net:
+    driver: bridge
