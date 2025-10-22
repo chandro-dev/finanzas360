@@ -34,7 +34,11 @@ def get_summary(
     )
     budgets: List[models.Budget] = (
         db.query(models.Budget)
-        .options(joinedload(models.Budget.wallet), joinedload(models.Budget.category))
+        .options(
+            joinedload(models.Budget.wallet),
+            joinedload(models.Budget.category),
+            joinedload(models.Budget.limits),
+        )
         .filter(models.Budget.user_id == current_user.id)
         .order_by(models.Budget.id)
         .all()
@@ -109,24 +113,29 @@ def get_summary(
         )
         if budget.wallet_id:
             spent_query = spent_query.filter(models.Transaction.wallet_id == budget.wallet_id)
-        if budget.category_id:
+
+        limit_categories = [limit.category_id for limit in budget.limits]
+        if limit_categories:
+            spent_query = spent_query.filter(models.Transaction.category_id.in_(limit_categories))
+        elif budget.category_id:
             spent_query = spent_query.filter(models.Transaction.category_id == budget.category_id)
-        if budget.start_date:
-            spent_query = spent_query.filter(models.Transaction.date >= budget.start_date)
-        if budget.end_date:
-            spent_query = spent_query.filter(models.Transaction.date <= budget.end_date)
+
+        if budget.period_start:
+            spent_query = spent_query.filter(models.Transaction.date >= budget.period_start)
+        if budget.period_end:
+            spent_query = spent_query.filter(models.Transaction.date <= budget.period_end)
 
         spent = float(spent_query.scalar() or 0.0)
-        budget_amount = float(budget.amount)
+        budget_amount = sum(float(limit.limit_amount or 0) for limit in budget.limits)
         remaining = budget_amount - spent
         progress = spent / budget_amount if budget_amount else 0.0
         budget_summaries.append(
             BudgetSummary(
                 id=budget.id,
                 name=budget.name,
-                amount=budget_amount,
-                start_date=budget.start_date,
-                end_date=budget.end_date,
+                limit_amount=budget_amount,
+                period_start=budget.period_start,
+                period_end=budget.period_end,
                 user_id=budget.user_id,
                 wallet_id=budget.wallet_id,
                 category_id=budget.category_id,

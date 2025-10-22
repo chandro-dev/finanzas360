@@ -11,6 +11,7 @@ class User(Base):
     name = Column(String)
     password_hash = Column(String, nullable=False)
     telegram_id = Column(String, unique=True, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
     wallets = relationship("Wallet", back_populates="user")
     categories = relationship("Category", back_populates="user")
     transactions = relationship("Transaction", back_populates="user")
@@ -37,6 +38,7 @@ class Category(Base):
     user_id = Column(Integer, ForeignKey("users.id"), index=True)
     user = relationship("User", back_populates="categories")
     transactions = relationship("Transaction", back_populates="category")
+    budget_limits = relationship("CategoryBudgetLimit", back_populates="category", cascade="all, delete-orphan")
 
 
 class Transaction(Base):
@@ -61,9 +63,8 @@ class Budget(Base):
     __tablename__ = "budgets"
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
-    amount = Column(Numeric(14, 2), nullable=False)
-    start_date = Column(Date, nullable=True)
-    end_date = Column(Date, nullable=True)
+    period_start = Column(Date, nullable=True)
+    period_end = Column(Date, nullable=True)
     user_id = Column(Integer, ForeignKey("users.id"), index=True, nullable=False)
     wallet_id = Column(Integer, ForeignKey("wallets.id"), nullable=True)
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=True)
@@ -73,6 +74,18 @@ class Budget(Base):
     user = relationship("User", back_populates="budgets")
     wallet = relationship("Wallet")
     category = relationship("Category")
+    limits = relationship("CategoryBudgetLimit", back_populates="budget", cascade="all, delete-orphan")
+
+
+class CategoryBudgetLimit(Base):
+    __tablename__ = "category_budget_limits"
+    id = Column(Integer, primary_key=True)
+    budget_id = Column(Integer, ForeignKey("budgets.id"), nullable=False)
+    category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
+    limit_amount = Column(Numeric(14, 2), nullable=False)
+
+    budget = relationship("Budget", back_populates="limits")
+    category = relationship("Category", back_populates="budget_limits")
 
 
 class APIKey(Base):

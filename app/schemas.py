@@ -112,11 +112,11 @@ class TransactionReadDetail(TransactionRead):
 # Budgets
 class BudgetBase(BaseModel):
     name: str
-    amount: float
-    start_date: dt_date | None = None
-    end_date: dt_date | None = None
+    period_start: dt_date | None = None
+    period_end: dt_date | None = None
     wallet_id: Optional[int] = None
     category_id: Optional[int] = None
+    limit_amount: float = 0.0
 
 
 class BudgetCreate(BudgetBase):
@@ -125,11 +125,11 @@ class BudgetCreate(BudgetBase):
 
 class BudgetUpdate(BaseModel):
     name: Optional[str] = None
-    amount: Optional[float] = None
-    start_date: dt_date | None = None
-    end_date: dt_date | None = None
+    period_start: dt_date | None = None
+    period_end: dt_date | None = None
     wallet_id: Optional[int] = None
     category_id: Optional[int] = None
+    limit_amount: Optional[float] = None
 
 
 class BudgetRead(BudgetBase):
