@@ -1,5 +1,5 @@
 from datetime import date as dt_date
-from typing import Optional, List
+from typing import Optional, List, Dict
 from pydantic import BaseModel, EmailStr
 try:
     # Pydantic v2
@@ -157,15 +157,27 @@ class APIKeyWithSecret(APIKeyRead):
 # Summaries
 class BalanceSummary(BaseModel):
     total_balance: float
-    currency_totals: dict[str, float]
+    currency_totals: Dict[str, float]
+    income_last_30: float
+    expense_last_30: float
+    net_last_30: float
 
 
 class WalletBalanceSummary(BaseModel):
     wallet: WalletReadLite
     balance: float
+    income_last_30: float
+    expense_last_30: float
+
+
+class BudgetSummary(BudgetRead):
+    spent: float
+    remaining: float
+    progress: float
 
 
 class SummaryResponse(BaseModel):
     total: BalanceSummary
     wallets: List[WalletBalanceSummary]
-    budgets: Optional[List[BudgetRead]] = None
+    budgets: Optional[List[BudgetSummary]] = None
+    recent_transactions: Optional[List[TransactionReadDetail]] = None

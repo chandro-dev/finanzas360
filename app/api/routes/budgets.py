@@ -17,6 +17,22 @@ def create_budget(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
+    if payload.wallet_id:
+        wallet = (
+            db.query(models.Wallet)
+            .filter(models.Wallet.id == payload.wallet_id, models.Wallet.user_id == current_user.id)
+            .first()
+        )
+        if not wallet:
+            raise HTTPException(status_code=404, detail="Wallet no pertenece al usuario")
+    if payload.category_id:
+        category = (
+            db.query(models.Category)
+            .filter(models.Category.id == payload.category_id, models.Category.user_id == current_user.id)
+            .first()
+        )
+        if not category:
+            raise HTTPException(status_code=404, detail="Categoría no pertenece al usuario")
     budget = models.Budget(
         name=payload.name,
         amount=payload.amount,
@@ -71,7 +87,33 @@ def update_budget(
     if not budget:
         raise HTTPException(status_code=404, detail="Presupuesto no encontrado")
 
-    for field, value in payload.model_dump(exclude_unset=True).items():
+    update_data = payload.model_dump(exclude_unset=True)
+    wallet_id = update_data.get("wallet_id")
+    category_id = update_data.get("category_id")
+    if wallet_id is not None:
+        if wallet_id:
+            wallet = (
+                db.query(models.Wallet)
+                .filter(models.Wallet.id == wallet_id, models.Wallet.user_id == current_user.id)
+                .first()
+            )
+            if not wallet:
+                raise HTTPException(status_code=404, detail="Wallet no pertenece al usuario")
+        else:
+            update_data["wallet_id"] = None
+    if category_id is not None:
+        if category_id:
+            category = (
+                db.query(models.Category)
+                .filter(models.Category.id == category_id, models.Category.user_id == current_user.id)
+                .first()
+            )
+            if not category:
+                raise HTTPException(status_code=404, detail="Categoría no pertenece al usuario")
+        else:
+            update_data["category_id"] = None
+
+    for field, value in update_data.items():
         setattr(budget, field, value)
 
     db.commit()
